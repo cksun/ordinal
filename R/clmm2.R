@@ -145,7 +145,7 @@ clmm2 <-
     Call <- match.call()
     if(missing(random)) {
         Call[[1]] <- as.name("clm2")
-        return(eval.parent(Call))
+        return(eval(Call, parent.frame()))
     }
     if(missing(lambda)) lambda <- NULL
     if(missing(contrasts)) contrasts <- NULL
@@ -153,13 +153,13 @@ clmm2 <-
     if(!setequal(names(control), c("method", "ctrl", "optCtrl")))
        stop("specify 'control' via clmm2.control()")
     if (missing(data)) data <- environment(location)
-    if (is.matrix(eval.parent(R$data)))
+    if (is.matrix(eval(R$data, parent.frame())))
         R$data <- as.data.frame(data)
 ### Collect all variables in a single formula and evaluate to handle
 ### missing values correctly:
     m <- match(c("location", "scale", "nominal"), names(R), 0)
     # F <- lapply(as.list(R[m]), eval.parent) ## evaluate in parent
-    F <- lapply(as.list(R[m]), eval, environment(location)) 
+    F <- lapply(as.list(R[m]), eval, parent.frame()) 
     varNames <- unique(unlist(lapply(F, all.vars)))
     longFormula <-
         eval(parse(text = paste("~", paste(varNames, collapse = "+")))[1])
@@ -170,7 +170,7 @@ clmm2 <-
     R$drop.unused.levels <- TRUE
     R[[1]] <- as.name("model.frame")
     names(R)[names(R) == "location"] <- "formula"
-    R <- eval.parent(R)
+    R <- eval(R, parent.frame())
     nonNA <- rownames(R)
 ### Append nonNA index to Call$subset to get the right design matrices
 ### from clm2:
@@ -185,7 +185,8 @@ clmm2 <-
     Call$method <- control$method
     Call$doFit <- Call$Hess <- FALSE
     Call[[1]] <- as.name("clm2")
-    rhoM <- eval.parent(Call)
+    Call$location = eval(Call$location, parent.frame())
+    rhoM <- eval(Call, parent.frame())
     if(control$method == "model.frame")
         return(rhoM)
     rhoM$call <- match.call()
